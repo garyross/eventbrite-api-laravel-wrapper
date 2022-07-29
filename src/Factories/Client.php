@@ -36,6 +36,8 @@ class Client implements ClientInterface
         $stack = HandlerStack::create();
 
         $stack->push(new ErrorHandler);
+        
+        $baseUrl = $baseUrl ?: 'https://www.eventbriteapi.com/v3/';
 
         $this->client = new HttpClient([
             'handler' => $stack,
