@@ -2,6 +2,7 @@
 
 namespace Marat555\Eventbrite;
 
+use Marat555\Eventbrite\Exceptions\EventbriteErrorException;
 use Marat555\Eventbrite\Factories\Api\DisplaySettings;
 use Marat555\Eventbrite\Factories\Api\Format;
 use Marat555\Eventbrite\Factories\Api\Media;
@@ -12,6 +13,7 @@ use Marat555\Eventbrite\Factories\Api\Subcategory;
 use Marat555\Eventbrite\Factories\Api\Webhook;
 use Marat555\Eventbrite\Factories\Api\Event;
 use Marat555\Eventbrite\Factories\Api\User;
+use Marat555\Eventbrite\Factories\Api\Order;
 
 /**
  * Eventbrite API wrapper for Laravel
@@ -94,7 +96,7 @@ class Eventbrite
      */
     public function displaySettings()
     {
-        return new displaySettings($this->client);
+        return new DisplaySettings($this->client);
     }
 
     /**
@@ -103,5 +105,53 @@ class Eventbrite
     public function media()
     {
         return new Media($this->client);
+    }
+    
+    /**
+     * @return Order
+     */
+    public function order(): Order
+    {
+        return new Order($this->client);
+    }
+    
+    public function getOrderByIdAndEmail($orderId, string $email, $strict = false)
+    {
+        $orderId = (int) $orderId;
+
+        try
+        {
+            $orders = $this->order()->attendees($orderId);
+        } catch (EventbriteErrorException $e)
+        {
+            return null;
+        }
+
+        // objects[] , Order entity
+
+
+        if (!$strict && count($orders->objects) === 1)
+        {
+
+            [$order] = $orders->objects;
+
+            return $order ?? null;
+        }
+
+        if (empty($email))
+        {
+            return null;
+        }
+
+        foreach ($orders->objects as $order)
+        {
+            $profileEmail = $order->profile->email ?? null;
+            if ($profileEmail === $email)
+            {
+                return $order ?? null;
+            }
+        }
+
+        return null;
     }
 }
