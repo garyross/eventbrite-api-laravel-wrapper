@@ -91,4 +91,34 @@ class Order extends AbstractApi implements OrderInterface
 
         return new ObjectList($pagination, $objects);
     }
+    
+     /**
+     * {@inheritdoc}
+     * @throws \Exception
+     */
+    public function attendees(int $orderId): ObjectList
+    {
+        $objects = null;
+        $pagination = null;
+
+        // Prep the endpoint
+        $endpoint = "orders/$orderId/attendees";
+
+        $response = $this->client->get($endpoint);
+        $response = json_decode($response);
+
+        $_endpoint ="attendees";
+
+        if (property_exists($response, $_endpoint)) {
+            $objects = array_map(function ($object) {
+                return $this->instantiateEntity($object);
+            }, $response->{$_endpoint});
+        }
+
+        if (property_exists($response, "$this->pagination")) {
+            $pagination = new Pagination($response->{$this->pagination});
+        }
+
+        return new ObjectList($pagination, $objects);
+    }
 }
